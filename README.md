@@ -1,7 +1,7 @@
 # AppDevFinale
 Combination of my groups code and changes made to my own after the original presentation to take part in Outstanding Project Presentation. 
 
-This project was a effort of 5 group members. 
+This project was an effort of 5 group members. 
 1. Rayden (Products)
 2. Dong En (Events)
 3. Trisven (Login/Membership)
