@@ -1580,6 +1580,7 @@ def purchasecartproduct(id):
     db.close()
 
     products_dict = {}
+    
     db = shelve.open('product.db', 'w')
     products_dict = db['Products']
     product_id = productcartobj.get_pProduct_id()
@@ -1594,13 +1595,13 @@ def purchasecartproduct(id):
     productobj.set_total_earned(totalearned)
     db['Products'] = products_dict
     db.close()
-
+    pqty = productcartobj.get_pProduct_qty()
     db = shelve.open('addproduct.db', 'w')
     addproductdict = db['addProducts']
     addproductdict.pop(id)
     db['addProducts'] = addproductdict
     db.close()
-    return redirect(url_for('home_product'))
+    return render_template('purchaseProduct.html',pqty = pqty, product = productobj)
 
 
 @app.route('/removecartProduct/<uuid:id>/', methods=['POST'])
