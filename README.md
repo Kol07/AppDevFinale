@@ -14,4 +14,4 @@ the product section as I am to present my individual portion.
 Functions of other members in this repository may not function as intended as this is a modified copy for Products. 
 
 To install all libaries/dependencies. 
- Run the command: pip install -r requirements.txt 
+ Run the command: ```pip install -r requirements.txt```
