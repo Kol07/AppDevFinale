@@ -13,8 +13,8 @@ from werkzeug.datastructures import CombinedMultiDict
 import re
 
 app = Flask(__name__)
-path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+#path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+#config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
 app.config['SECRET_KEY'] = 'thisisasecret'
 app.config['UPLOADED_IMAGES_DEST'] = 'static/uploads/'
 app.config['Product_Images_Dest'] = 'static/productimages/'
@@ -93,20 +93,24 @@ def admin_home():
     products_dict = db['Products']
     productname_list = []
     productsales_list = []
+    totalsold_list = []
     producttotalsales = 0
     for key in products_dict:
         productobj = products_dict.get(key)
         productname = productobj.get_product_name()
         productsales = productobj.get_total_earned2()
+        totalsold = productobj.get_product_sold()
 
         productsalesnum = float(re.sub('[^0-9.]', '', productsales))
         producttotalsales += productsalesnum
         productname_list.append(productname)
         productsales_list.append(productsalesnum)
+        totalsold_list.append(totalsold)
     producttotalsales = "${:.2f}".format(producttotalsales)
     print(producttotalsales)
+    
 
-    return render_template('home.html', events=json.dumps(events), reg_pax=json.dumps(registered), keysList=json.dumps(keysList), countList=json.dumps(countList), productname=json.dumps(productname_list), productsales=json.dumps(productsales_list), producttotalsales=json.dumps(producttotalsales))
+    return render_template('home.html', events=json.dumps(events), reg_pax=json.dumps(registered), keysList=json.dumps(keysList), countList=json.dumps(countList), productname=json.dumps(productname_list), productsales=json.dumps(productsales_list), producttotalsales=json.dumps(producttotalsales),producttotalsold=json.dumps(totalsold_list))
 
 
 @app.route('/contactUs')
@@ -1432,6 +1436,14 @@ def single_product(id):
     products_dict = db['Products']
     db.close()
     p = products_dict.get(id)
+    
+    if isinstance(session.get('Customer'),int):
+        logincheck = 'True'
+    else:
+        logincheck = 'False'
+    
+    print(logincheck)
+ 
 
     if request.method == 'POST' and purchase_product_form.validate():
         products_dict = {}
@@ -1440,8 +1452,8 @@ def single_product(id):
         product_id = products_dict.get(id)
         if purchase_product_form.qty.data > product_id.get_product_qty():  # Validate user input if more than stock
             purchase_product_form.qty.errors.append('Quantity selected was more than stock')
-            return render_template('singleProduct.html', product=p, form=purchase_product_form)
-
+            return render_template('singleProduct.html', product=p, form=purchase_product_form,logincheck = logincheck)
+        
         if purchase_product_form.option.data == 'Purchase':
             purchaseproducts_dict = {}
             totalsold = product_id.get_product_sold() + purchase_product_form.qty.data
@@ -1461,7 +1473,7 @@ def single_product(id):
             else:
                 price = "${:.2f}".format(product_id.get_product_price())
                 price2 = "${}".format(product_id.get_product_price())
-
+            
             numericprice = re.sub('[^0-9.]', '', price2)
             calctotalprice = float(numericprice) * float(purchase_product_form.qty.data)
             totalprice = "${:.2f}".format(calctotalprice)
@@ -1513,7 +1525,7 @@ def single_product(id):
             return render_template('addcartProduct.html', product=p, pqty=purchase_product_form.qty.data)
         else:
             print('Error')
-    return render_template('singleProduct.html', product=p, form=purchase_product_form)
+    return render_template('singleProduct.html', product=p, form=purchase_product_form,logincheck = logincheck)
 
 
 @app.route('/viewpurchaseProduct')
@@ -1524,10 +1536,12 @@ def viewpurchaseproduct():
     db.close()
     customer_list = []
 
+    
     for key in purchaseproductdict:  # Key is tempvar (uuid)
         purchaseproduct = purchaseproductdict.get(key)
         if purchaseproduct.get_pProduct_userid() == session['Customer']:
             customer_list.append(purchaseproduct)
+   
 
     return render_template('viewpurchaseproduct.html', customer=customer_list)
 
@@ -1544,6 +1558,8 @@ def viewcartproduct():
         print(key)
         if purchaseproduct.get_pProduct_userid() == session['Customer']:
             customer_list.append(purchaseproduct)
+
+    
     return render_template('viewcartProduct.html', customer=customer_list)
 
 
@@ -1823,7 +1839,7 @@ def legacy_images(fname):
 def profile_images(fname):
     return app.redirect(app.url_for('static', filename='ProfilePic/' + fname), code=301)
 
-@app.route("/getPDF/<evename>")
+'''@app.route("/getPDF/<evename>")
 def get_pdf(evename):
 
     regeve_dict = {}
@@ -1843,7 +1859,7 @@ def get_pdf(evename):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = "inline; filename=registeredUserLists.pdf"
 
-    return response
+    return response'''
 
 
 if __name__ == '__main__':
